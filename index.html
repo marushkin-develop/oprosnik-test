@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            min-height: 500px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .quiz-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .quiz-info p {
+            font-size: 16px;
+            margin: 8px 0;
+            color: #555;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 8px 0;
+            width: 100%;
+            max-width: 250px;
+            align-self: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn.secondary {
+            background: #6c757d;
+        }
+
+        .btn.submit {
+            background: #28a745;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .timer {
+            font-size: 20px;
+            font-weight: bold;
+            color: #dc3545;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress {
+            font-size: 16px;
+            color: #666;
+        }
+
+        #question-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        #question-text {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+
+        .option:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+        }
+
+        .option.selected {
+            background: #e7f3ff;
+            border-color: #667eea;
+        }
+
+        .option input {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 15px;
+        }
+
+        .navigation .btn {
+            flex: 1;
+            max-width: none;
+        }
+
+        .score-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .details p {
+            font-size: 16px;
+            margin: 8px 0;
+            color: #555;
+        }
+
+        .pass {
+            color: #28a745;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .fail {
+            color: #dc3545;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        #fail-status {
+            display: none;
+        }
+
+        /* Стили для админ-панели */
+        .admin-container {
+            max-width: 1200px;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        
+        .tab {
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .questions-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .question-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .question-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        /* Стили для формы ника */
+        .nickname-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .nickname-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .nickname-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .user-badge {
+            background: #e7f3ff;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                min-height: 400px;
+            }
+            
+            .quiz-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .navigation {
+                flex-direction: column;
+            }
+            
+            .score-circle {
+                width: 120px;
+                height: 120px;
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Экран ввода ника -->
+        <div id="nickname-screen" class="screen active">
+            <h1>Добро пожаловать в Викторину!</h1>
+            <div class="nickname-form">
+                <label for="nickname-input">Введите ваш никнейм:</label>
+                <input type="text" id="nickname-input" placeholder="Например: Игрок123">
+                <button id="start-with-nickname" class="btn">Начать викторину</button>
+            </div>
+            <button id="go-to-admin" class="btn secondary">Админ-панель</button>
+        </div>
+
+        <!-- Экран приветствия -->
+        <div id="welcome-screen" class="screen">
+            <h1>Привет, <span id="nickname-display">Игрок</span>!</h1>
+            <div class="quiz-info">
+                <p><span id="total-questions">5</span> вопросов</p>
+                <p>Время: <span id="time-limit">5</span> минут</p>
+                <p>Проходной балл: <span id="passing-score">60</span>%</p>
+            </div>
+            <button id="start-btn" class="btn">Начать викторину</button>
+            <button id="admin-btn" class="btn secondary">Админ-панель</button>
+        </div>
+
+        <!-- Экран викторины -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <div class="user-badge">
+                    Игрок: <span id="current-nickname">Игрок</span>
+                </div>
+                <div class="timer">
+                    <span id="timer-display">05:00</span>
+                </div>
+                <div class="progress">
+                    Вопрос <span id="current-question">1</span> из <span id="total-questions-display">5</span>
+                </div>
+            </div>
+
+            <div id="question-container">
+                <h2 id="question-text">Текст вопроса</h2>
+                <div id="options-container" class="options">
+                    <!-- Варианты ответов будут добавляться динамически -->
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button id="prev-btn" class="btn secondary">Назад</button>
+                <button id="next-btn" class="btn">Далее</button>
+                <button id="submit-btn" class="btn submit">Отправить</button>
+            </div>
+        </div>
+
+        <!-- Экран результатов -->
+        <div id="result-screen" class="screen">
+            <h2><span id="result-nickname">Игрок</span>, викторина завершена!</h2>
+            <div class="score-container">
+                <div class="score-circle">
+                    <span id="score-percentage">0%</span>
+                </div>
+                <p>Ваш результат: <span id="score-text">0</span> из <span id="max-score">5</span></p>
+                <p id="pass-status" class="pass">Вы успешно прошли викторину!</p>
+                <p id="fail-status" class="fail">К сожалению, вы не прошли викторину.</p>
+            </div>
+            <div class="details">
+                <p>Правильных ответов: <span id="correct-answers">0</span></p>
+                <p>Неправильных ответов: <span id="wrong-answers">0</span></p>
+                <p>Затраченное время: <span id="time-taken">0:00</span></p>
+            </div>
+            <button id="restart-btn" class="btn">Пройти снова</button>
+            <button id="home-btn" class="btn secondary">На главную</button>
+        </div>
+
+        <!-- Экран админ-панели -->
+        <div id="admin-screen" class="screen">
+            <a href="#" id="back-to-quiz" class="back-btn">← Назад к викторине</a>
+            
+            <div class="admin-header">
+                <h1>Админ-панель викторины</h1>
+                <button id="save-all-btn" class="btn">Сохранить всё</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" data-tab="questions">Вопросы</button>
+                <button class="tab" data-tab="config">Настройки</button>
+            </div>
+            
+            <!-- Вкладка вопросов -->
+            <div id="questions-tab" class="tab-content active">
+                <button id="add-question-btn" class="btn" style="margin-bottom: 15px;">Добавить вопрос</button>
+                
+                <div id="questions-list" class="questions-list">
+                    <!-- Вопросы будут загружены динамически -->
+                </div>
+                
+                <!-- Форма добавления/редактирования вопроса -->
+                <div id="question-form" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <h3 id="form-title">Добавить вопрос</h3>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Вопрос:</label>
+                        <textarea id="question-text-input" placeholder="Введите текст вопроса" 
+                                  style="width: 100%; padding: 10px; border: 1px solid #dee2e6; border-radius: 5px; font-size: 16px; height: 80px;"></textarea>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Варианты ответов:</label>
+                        <div id="options-list" style="background: white; padding: 15px; border-radius: 5px;">
+                            <div class="option-item" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <input type="radio" name="correct-answer" value="0" checked>
+                                <input type="text" class="option-input" placeholder="Вариант 1" style="flex: 1; padding: 8px; border: 1px solid #dee2e6; border-radius: 5px;">
+                                <button type="button" class="remove-option-btn" style="background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer;">×</button>
+                            </div>
+                            <div class="option-item" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <input type="radio" name="correct-answer" value="1">
+                                <input type="text" class="option-input" placeholder="Вариант 2" style="flex: 1; padding: 8px; border: 1px solid #dee2e6; border-radius: 5px;">
+                                <button type="button" class="remove-option-btn" style="background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer;">×</button>
+                            </div>
+                        </div>
+                        <button type="button" id="add-option-btn" class="btn secondary" style="margin-top: 10px;">Добавить вариант</button>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button id="save-question-btn" class="btn">Сохранить вопрос</button>
+                        <button id="cancel-edit-btn" class="btn secondary">Отмена</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Вкладка настроек -->
+            <div id="config-tab" class="tab-content">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <label for="quiz-duration" style="display: block; margin-bottom: 8px; font-weight: bold;">Длительность викторины (минуты):</label>
+                        <input type="number" id="quiz-duration" min="1" max="60" value="5" 
+                               style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 5px; font-size: 16px;">
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <label for="passing-score" style="display: block; margin-bottom: 8px; font-weight: bold;">Проходной балл (%):</label>
+                        <input type="number" id="passing-score" min="1" max="100" value="60" 
+                               style="width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 5px; font-size: 16px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Основной код приложения
+        class QuizApp {
+            constructor() {
+                console.log('Приложение инициализировано');
+                
+                // Инициализация данных
+                this.questions = [];
+                this.currentQuestionIndex = 0;
+                this.userAnswers = [];
+                this.score = 0;
+                this.timer = null;
+                this.timeLeft = 0;
+                this.startTime = null;
+                this.nickname = 'Игрок';
+                this.quizConfig = {
+                    duration: 5,
+                    passingScore: 60
+                };
+                
+                // Для админ-панели
+                this.editingIndex = null;
+                
+                // Загружаем вопросы из localStorage или используем дефолтные
+                this.loadQuestions();
+                this.loadConfig();
+                
+                // Находим все элементы
+                this.findElements();
+                
+                // Настраиваем обработчики событий
+                this.setupEventListeners();
+                
+                console.log('Приложение готово к работе');
+            }
+            
+            loadQuestions() {
+                try {
+                    const saved = localStorage.getItem('quizQuestions');
+                    if (saved) {
+                        this.questions = JSON.parse(saved);
+                    } else {
+                        // Дефолтные вопросы
+                        this.questions = [
+                            {
+                                question: "Какая планета известна как Красная планета?",
+                                options: ["Земля", "Марс", "Юпитер", "Венера"],
+                                correctAnswer: 1
+                            },
+                            {
+                                question: "Какова температура кипения воды?",
+                                options: ["100°C", "90°C", "120°C", "80°C"],
+                                correctAnswer: 0
+                            },
+                            {
+                                question: "Кто написал 'Ромео и Джульетту'?",
+                                options: ["Уильям Шекспир", "Чарльз Диккенс", "Марк Твен", "Лев Толстой"],
+                                correctAnswer: 0
+                            }
+                        ];
+                        this.saveQuestions();
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки вопросов:', error);
+                }
+            }
+            
+            saveQuestions() {
+                localStorage.setItem('quizQuestions', JSON.stringify(this.questions));
+            }
+            
+            loadConfig() {
+                try {
+                    const saved = localStorage.getItem('quizConfig');
+                    if (saved) {
+                        this.quizConfig = JSON.parse(saved);
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки настроек:', error);
+                }
+            }
+            
+            saveConfig() {
+                localStorage.setItem('quizConfig', JSON.stringify(this.quizConfig));
+            }
+            
+            findElements() {
+                // Основные экраны
+                this.screens = {
+                    nickname: document.getElementById('nickname-screen'),
+                    welcome: document.getElementById('welcome-screen'),
+                    quiz: document.getElementById('quiz-screen'),
+                    result: document.getElementById('result-screen'),
+                    admin: document.getElementById('admin-screen')
+                };
+                
+                // Элементы экрана ника
+                this.nicknameInput = document.getElementById('nickname-input');
+                this.startWithNicknameBtn = document.getElementById('start-with-nickname');
+                this.goToAdminBtn = document.getElementById('go-to-admin');
+                
+                // Элементы экрана приветствия
+                this.nicknameDisplay = document.getElementById('nickname-display');
+                this.startBtn = document.getElementById('start-btn');
+                this.adminBtn = document.getElementById('admin-btn');
+                
+                // Элементы экрана викторины
+                this.currentNickname = document.getElementById('current-nickname');
+                this.timerDisplay = document.getElementById('timer-display');
+                this.currentQuestionEl = document.getElementById('current-question');
+                this.totalQuestionsDisplay = document.getElementById('total-questions-display');
+                this.questionText = document.getElementById('question-text');
+                this.optionsContainer = document.getElementById('options-container');
+                this.prevBtn = document.getElementById('prev-btn');
+                this.nextBtn = document.getElementById('next-btn');
+                this.submitBtn = document.getElementById('submit-btn');
+                
+                // Элементы экрана результатов
+                this.resultNickname = document.getElementById('result-nickname');
+                this.scorePercentage = document.getElementById('score-percentage');
+                this.scoreText = document.getElementById('score-text');
+                this.maxScore = document.getElementById('max-score');
+                this.correctAnswers = document.getElementById('correct-answers');
+                this.wrongAnswers = document.getElementById('wrong-answers');
+                this.timeTaken = document.getElementById('time-taken');
+                this.passStatus = document.getElementById('pass-status');
+                this.failStatus = document.getElementById('fail-status');
+                this.restartBtn = document.getElementById('restart-btn');
+                this.homeBtn = document.getElementById('home-btn');
+                
+                // Элементы админ-панели
+                this.backToQuizBtn = document.getElementById('back-to-quiz');
+                this.saveAllBtn = document.getElementById('save-all-btn');
+                this.addQuestionBtn = document.getElementById('add-question-btn');
+                this.questionsList = document.getElementById('questions-list');
+                this.questionForm = document.getElementById('question-form');
+                this.formTitle = document.getElementById('form-title');
+                this.questionTextInput = document.getElementById('question-text-input');
+                this.optionsList = document.getElementById('options-list');
+                this.addOptionBtn = document.getElementById('add-option-btn');
+                this.saveQuestionBtn = document.getElementById('save-question-btn');
+                this.cancelEditBtn = document.getElementById('cancel-edit-btn');
+                this.quizDurationInput = document.getElementById('quiz-duration');
+                this.passingScoreInput = document.getElementById('passing-score');
+                this.tabs = document.querySelectorAll('.tab');
+                this.tabContents = document.querySelectorAll('.tab-content');
+                
+                // Заполняем настройки в админке
+                this.quizDurationInput.value = this.quizConfig.duration;
+                this.passingScoreInput.value = this.quizConfig.passingScore;
+            }
+            
+            setupEventListeners() {
+                console.log('Настраиваем обработчики событий');
+                
+                // Кнопка начала с ником
+                this.startWithNicknameBtn.addEventListener('click', () => {
+                    console.log('Кнопка "Начать викторину" нажата');
+                    this.startWithNickname();
+                });
+                
+                this.nicknameInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.startWithNickname();
+                });
+                
+                // Переход в админку с экрана ника
+                this.goToAdminBtn.addEventListener('click', () => {
+                    this.showScreen('admin');
+                    this.renderAdminQuestions();
+                });
+                
+                // Кнопка начала викторины
+                this.startBtn.addEventListener('click', () => {
+                    this.startQuiz();
+                });
+                
+                // Переход в админку с главного экрана
+                this.adminBtn.addEventListener('click', () => {
+                    this.showScreen('admin');
+                    this.renderAdminQuestions();
+                });
+                
+                // Навигация в викторине
+                this.prevBtn.addEventListener('click', () => this.prevQuestion());
+                this.nextBtn.addEventListener('click', () => this.nextQuestion());
+                this.submitBtn.addEventListener('click', () => this.submitQuiz());
+                
+                // Результаты
+                this.restartBtn.addEventListener('click', () => this.restartQuiz());
+                this.homeBtn.addEventListener('click', () => this.showScreen('welcome'));
+                
+                // Админ-панель
+                this.backToQuizBtn.addEventListener('click', () => this.showScreen('nickname'));
+                this.saveAllBtn.addEventListener('click', () => this.saveAllSettings());
+                this.addQuestionBtn.addEventListener('click', () => this.showQuestionForm());
+                this.addOptionBtn.addEventListener('click', () => this.addOption());
+                this.saveQuestionBtn.addEventListener('click', () => this.saveQuestion());
+                this.cancelEditBtn.addEventListener('click', () => this.cancelEdit());
+                
+                // Вкладки админки
+                this.tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabName = tab.dataset.tab;
+                        this.switchTab(tabName);
+                    });
+                });
+                
+                // Делегирование событий для админки - ОБНОВЛЕНО!
+                this.questionsList.addEventListener('click', (e) => {
+                    console.log('Клик в списке вопросов:', e.target);
+                    
+                    if (e.target.classList.contains('edit-btn')) {
+                        const index = parseInt(e.target.dataset.index);
+                        console.log('Редактировать вопрос с индексом:', index);
+                        this.editQuestion(index);
+                    }
+                    if (e.target.classList.contains('delete-btn')) {
+                        const index = parseInt(e.target.dataset.index);
+                        console.log('Удалить вопрос с индексом:', index);
+                        this.deleteQuestion(index);
+                    }
+                });
+                
+                // Делегирование событий для удаления вариантов ответов
+                this.optionsList.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('remove-option-btn')) {
+                        e.target.closest('.option-item').remove();
+                    }
+                });
+                
+                console.log('Все обработчики настроены');
+            }
+            
+            startWithNickname() {
+                const nickname = this.nicknameInput.value.trim();
+                console.log('Введен ник:', nickname);
+                
+                if (!nickname) {
+                    alert('Пожалуйста, введите ваш никнейм');
+                    return;
+                }
+                
+                this.nickname = nickname;
+                this.nicknameDisplay.textContent = nickname;
+                
+                // Обновляем информацию о викторине
+                document.getElementById('total-questions').textContent = this.questions.length;
+                document.getElementById('time-limit').textContent = this.quizConfig.duration;
+                document.getElementById('passing-score').textContent = this.quizConfig.passingScore;
+                
+                this.showScreen('welcome');
+            }
+            
+            showScreen(screenName) {
+                console.log('Переключаем на экран:', screenName);
+                
+                // Скрываем все экраны
+                Object.values(this.screens).forEach(screen => {
+                    screen.classList.remove('active');
+                });
+                
+                // Показываем нужный экран
+                if (this.screens[screenName]) {
+                    this.screens[screenName].classList.add('active');
+                }
+            }
+            
+            startQuiz() {
+                console.log('Начинаем викторину');
+                
+                this.currentQuestionIndex = 0;
+                this.userAnswers = new Array(this.questions.length).fill(null);
+                this.score = 0;
+                this.startTime = Date.now();
+                
+                // Устанавливаем таймер
+                this.timeLeft = this.quizConfig.duration * 60;
+                this.startTimer();
+                
+                // Переходим к викторине
+                this.showScreen('quiz');
+                
+                this.totalQuestionsDisplay.textContent = this.questions.length;
+                this.currentNickname.textContent = this.nickname;
+                this.loadQuestion();
+            }
+            
+            startTimer() {
+                this.updateTimer();
+                
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTimer();
+                    
+                    if (this.timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.submitQuiz();
+                    }
+                }, 1000);
+            }
+            
+            updateTimer() {
+                const minutes = Math.floor(this.timeLeft / 60);
+                const seconds = this.timeLeft % 60;
+                this.timerDisplay.textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            loadQuestion() {
+                const question = this.questions[this.currentQuestionIndex];
+                
+                this.questionText.textContent = question.question;
+                this.currentQuestionEl.textContent = this.currentQuestionIndex + 1;
+                
+                // Очищаем варианты
+                this.optionsContainer.innerHTML = '';
+                
+                // Создаем новые варианты
+                question.options.forEach((option, index) => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    if (this.userAnswers[this.currentQuestionIndex] === index) {
+                        optionElement.classList.add('selected');
+                    }
+                    
+                    optionElement.innerHTML = `
+                        <input type="radio" name="answer" id="option${index}" value="${index}"
+                               ${this.userAnswers[this.currentQuestionIndex] === index ? 'checked' : ''}>
+                        <label for="option${index}">${option}</label>
+                    `;
+                    
+                    optionElement.addEventListener('click', () => this.selectAnswer(index));
+                    
+                    this.optionsContainer.appendChild(optionElement);
+                });
+                
+                // Обновляем кнопки
+                this.prevBtn.disabled = this.currentQuestionIndex === 0;
+                this.nextBtn.style.display = 
+                    this.currentQuestionIndex < this.questions.length - 1 ? 'block' : 'none';
+                this.submitBtn.style.display = 
+                    this.currentQuestionIndex === this.questions.length - 1 ? 'block' : 'none';
+            }
+            
+            selectAnswer(answerIndex) {
+                this.userAnswers[this.currentQuestionIndex] = answerIndex;
+                
+                // Обновляем отображение
+                const options = document.querySelectorAll('.option');
+                options.forEach((option, index) => {
+                    if (index === answerIndex) {
+                        option.classList.add('selected');
+                        option.querySelector('input').checked = true;
+                    } else {
+                        option.classList.remove('selected');
+                        option.querySelector('input').checked = false;
+                    }
+                });
+            }
+            
+            prevQuestion() {
+                if (this.currentQuestionIndex > 0) {
+                    this.currentQuestionIndex--;
+                    this.loadQuestion();
+                }
+            }
+            
+            nextQuestion() {
+                if (this.userAnswers[this.currentQuestionIndex] === null) {
+                    alert('Пожалуйста, выберите ответ');
+                    return;
+                }
+                
+                if (this.currentQuestionIndex < this.questions.length - 1) {
+                    this.currentQuestionIndex++;
+                    this.loadQuestion();
+                }
+            }
+            
+            submitQuiz() {
+                clearInterval(this.timer);
+                
+                if (this.userAnswers.some(answer => answer === null)) {
+                    if (!confirm('Не на все вопросы даны ответы. Отправить всё равно?')) {
+                        return;
+                    }
+                }
+                
+                this.calculateScore();
+                this.showResults();
+            }
+            
+            calculateScore() {
+                this.score = 0;
+                this.questions.forEach((question, index) => {
+                    if (this.userAnswers[index] === question.correctAnswer) {
+                        this.score++;
+                    }
+                });
+            }
+            
+            showResults() {
+                const timeTaken = Math.floor((Date.now() - this.startTime) / 1000);
+                const minutes = Math.floor(timeTaken / 60);
+                const seconds = timeTaken % 60;
+                
+                const percentage = Math.round((this.score / this.questions.length) * 100);
+                const passed = percentage >= this.quizConfig.passingScore;
+                
+                // Обновляем данные
+                this.resultNickname.textContent = this.nickname;
+                this.scorePercentage.textContent = `${percentage}%`;
+                this.scoreText.textContent = this.score;
+                this.maxScore.textContent = this.questions.length;
+                this.correctAnswers.textContent = this.score;
+                this.wrongAnswers.textContent = this.questions.length - this.score;
+                this.timeTaken.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (passed) {
+                    this.passStatus.style.display = 'block';
+                    this.failStatus.style.display = 'none';
+                } else {
+                    this.passStatus.style.display = 'none';
+                    this.failStatus.style.display = 'block';
+                }
+                
+                this.showScreen('result');
+            }
+            
+            restartQuiz() {
+                this.showScreen('welcome');
+            }
+            
+            // Админ-панель функции
+            switchTab(tabName) {
+                this.tabs.forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.tab === tabName);
+                });
+                
+                this.tabContents.forEach(content => {
+                    content.classList.toggle('active', content.id === `${tabName}-tab`);
+                });
+            }
+            
+            renderAdminQuestions() {
+                console.log('Рендерим вопросы в админке');
+                this.questionsList.innerHTML = '';
+                
+                if (this.questions.length === 0) {
+                    this.questionsList.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">Нет вопросов. Добавьте первый вопрос!</p>';
+                    return;
+                }
+                
+                this.questions.forEach((question, index) => {
+                    const questionElement = document.createElement('div');
+                    questionElement.className = 'question-item';
+                    questionElement.innerHTML = `
+                        <h4>Вопрос ${index + 1}</h4>
+                        <p><strong>${question.question}</strong></p>
+                        <p>Варианты:</p>
+                        <ul>
+                            ${question.options.map((option, optIndex) => `
+                                <li style="margin: 5px 0; padding-left: 5px; ${optIndex === question.correctAnswer ? 'color: #28a745; font-weight: bold;' : ''}">
+                                    ${optIndex === question.correctAnswer ? '✓ ' : ''}${option}
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <div class="question-actions">
+                            <button class="btn edit-btn" data-index="${index}" style="background: #667eea; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Редактировать</button>
+                            <button class="btn secondary delete-btn" data-index="${index}" style="background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Удалить</button>
+                        </div>
+                    `;
+                    
+                    this.questionsList.appendChild(questionElement);
+                });
+                console.log('Вопросов отрисовано:', this.questions.length);
+            }
+            
+            showQuestionForm(question = null) {
+                console.log('Показываем форму вопроса, question:', question);
+                this.questionForm.style.display = 'block';
+                this.addQuestionBtn.style.display = 'none';
+                
+                if (question && this.editingIndex !== null) {
+                    // Режим редактирования
+                    this.formTitle.textContent = 'Редактировать вопрос';
+                    this.questionTextInput.value = question.question;
+                    
+                    // Очищаем варианты
+                    this.optionsList.innerHTML = '';
+                    
+                    // Добавляем варианты из вопроса
+                    question.options.forEach((option, optIndex) => {
+                        const optionElement = document.createElement('div');
+                        optionElement.className = 'option-item';
+                        optionElement.style.cssText = 'display: flex; align-items: center; gap: 10px; margin-bottom: 10px;';
+                        optionElement.innerHTML = `
+                            <input type="radio" name="correct-answer" value="${optIndex}" 
+                                   ${optIndex === question.correctAnswer ? 'checked' : ''}>
+                            <input type="text" class="option-input" value="${option}" 
+                                   style="flex: 1; padding: 8px; border: 1px solid #dee2e6; border-radius: 5px;">
+                            <button type="button" class="remove-option-btn" 
+                                    style="background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer;">×</button>
+                        `;
+                        this.optionsList.appendChild(optionElement);
+                    });
+                } else {
+                    // Режим добавления
+                    this.editingIndex = null;
+                    this.formTitle.textContent = 'Добавить вопрос';
+                    this.questionTextInput.value = '';
+                    this.optionsList.innerHTML = `
+                        <div class="option-item" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <input type="radio" name="correct-answer" value="0" checked>
+                            <input type="text" class="option-input" placeholder="Вариант 1" 
+                                   style="flex: 1; padding: 8px; border: 1px solid #dee2e6; border-radius: 5px;">
+                            <button type="button" class="remove-option-btn" 
+                                    style="background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer;">×</button>
+                        </div>
+                        <div class="option-item" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <input type="radio" name="correct-answer" value="1">
+                            <input type="text" class="option-input" placeholder="Вариант 2" 
+                                   style="flex: 1; padding: 8px; border: 1px solid #dee2e6; border-radius: 5px;">
+                            <button type="button" class="remove-option-btn" 
+                                    style="background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer;">×</button>
+                        </div>
+                    `;
+                }
+            }
+            
+            addOption() {
+                const optionCount = this.optionsList.children.length;
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option-item';
+                optionElement.style.cssText = 'display: flex; align-items: center; gap: 10px; margin-bottom: 10px;';
+                optionElement.innerHTML = `
+                    <input type="radio" name="correct-answer" value="${optionCount}">
+                    <input type="text" class="option-input" placeholder="Вариант ${optionCount + 1}" 
+                           style="flex: 1; padding: 8px; border: 1px solid #dee2e6; border-radius: 5px;">
+                    <button type="button" class="remove-option-btn" 
+                            style="background: #dc3545; color: white; border: none; width: 30px; height: 30px; border-radius: 5px; cursor: pointer;">×</button>
+                `;
+                this.optionsList.appendChild(optionElement);
+            }
+            
+            saveQuestion() {
+                console.log('Сохраняем вопрос, editingIndex:', this.editingIndex);
+                
+                const questionText = this.questionTextInput.value.trim();
+                const optionInputs = this.optionsList.querySelectorAll('.option-input');
+                const options = [];
+                let correctAnswer = -1;
+                
+                // Проверки
+                if (!questionText) {
+                    alert('Введите текст вопроса');
+                    return;
+                }
+                
+                optionInputs.forEach((input, index) => {
+                    const value = input.value.trim();
+                    if (value) {
+                        options.push(value);
+                        
+                        // Проверяем правильный ответ
+                        const radio = input.previousElementSibling;
+                        if (radio.checked) {
+                            correctAnswer = index;
+                        }
+                    }
+                });
+                
+                if (options.length < 2) {
+                    alert('Добавьте как минимум 2 варианта ответа');
+                    return;
+                }
+                
+                if (correctAnswer === -1) {
+                    alert('Выберите правильный ответ');
+                    return;
+                }
+                
+                const question = {
+                    question: questionText,
+                    options: options,
+                    correctAnswer: correctAnswer
+                };
+                
+                if (this.editingIndex !== null && this.editingIndex >= 0) {
+                    // Редактируем существующий вопрос
+                    console.log('Редактируем вопрос с индексом:', this.editingIndex);
+                    this.questions[this.editingIndex] = question;
+                } else {
+                    // Добавляем новый вопрос
+                    console.log('Добавляем новый вопрос');
+                    this.questions.push(question);
+                }
+                
+                this.cancelEdit();
+                this.saveQuestions();
+                this.renderAdminQuestions();
+                alert('Вопрос сохранен!');
+            }
+            
+            cancelEdit() {
+                this.questionForm.style.display = 'none';
+                this.addQuestionBtn.style.display = 'block';
+                this.editingIndex = null;
+            }
+            
+            editQuestion(index) {
+                console.log('Редактируем вопрос с индексом:', index);
+                if (index >= 0 && index < this.questions.length) {
+                    this.editingIndex = index;
+                    const question = this.questions[index];
+                    this.showQuestionForm(question);
+                } else {
+                    console.error('Некорректный индекс:', index);
+                }
+            }
+            
+            deleteQuestion(index) {
+                if (confirm('Удалить этот вопрос?')) {
+                    this.questions.splice(index, 1);
+                    this.saveQuestions();
+                    this.renderAdminQuestions();
+                    alert('Вопрос удален!');
+                }
+            }
+            
+            saveAllSettings() {
+                // Сохраняем настройки
+                this.quizConfig = {
+                    duration: parseInt(this.quizDurationInput.value) || 5,
+                    passingScore: parseInt(this.passingScoreInput.value) || 60
+                };
+                
+                this.saveConfig();
+                this.saveQuestions();
+                alert('Все изменения сохранены!');
+                
+                // Обновляем отображение в викторине
+                document.getElementById('total-questions').textContent = this.questions.length;
+                document.getElementById('time-limit').textContent = this.quizConfig.duration;
+                document.getElementById('passing-score').textContent = this.quizConfig.passingScore;
+            }
+        }
+        
+        // Запуск приложения при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM полностью загружен');
+            window.quizApp = new QuizApp();
+        });
+    </script>
+</body>
+</html>
